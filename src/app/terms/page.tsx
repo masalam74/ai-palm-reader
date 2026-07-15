@@ -110,7 +110,7 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-2 text-base font-semibold text-white">10. Contact</h2>
             <p>
-              If you have any questions about these Terms of Service, please contact us at <Link href="/contact" className="text-amber-400 hover:text-amber-300">our contact page</Link> or email us at support@aipalmreader.com.
+              If you have any questions about these Terms of Service, please contact us at <Link href="/contact" className="text-amber-400 hover:text-amber-300">our contact page</Link> or email us at technosupportnow@gmail.com.
             </p>
           </section>
         </div>
