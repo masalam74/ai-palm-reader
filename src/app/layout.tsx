@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "AI Palm Reader" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
     title: "AI Palm Reader - Free Online Palm Reading",
