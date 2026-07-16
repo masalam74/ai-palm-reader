@@ -59,10 +59,11 @@ async function analyzeWithGemini(imageUrl: string): Promise<string> {
     throw new Error("GOOGLE_API_KEY environment variable is not set.");
   }
 
-  const response = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+  const response = await fetch(GEMINI_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: "gemini-2.0-flash",
