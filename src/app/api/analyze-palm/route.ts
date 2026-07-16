@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
 
 export const maxDuration = 180;
 export const dynamic = "force-dynamic";
+
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
 const PALM_PROMPT = `You are a trained palmistry analyst. Follow these established methods precisely:
 
@@ -51,26 +52,41 @@ async function compressImage(buffer: ArrayBuffer): Promise<Buffer> {
   }
 }
 
-/** Call VLM and collect response — uses streaming to avoid truncation */
-async function streamVision(zai: Awaited<ReturnType<typeof ZAI.create>>, imageUrl: string): Promise<string> {
-  const result = await zai.chat.completions.createVision({
-    stream: true,
-    // @ts-expect-error — model not needed at runtime
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: PALM_PROMPT },
-          { type: "image_url", image_url: { url: imageUrl } },
-        ],
-      },
-    ],
-    thinking: { type: "disabled" },
+/** Call Gemini Vision API with streaming */
+async function analyzeWithGemini(imageUrl: string): Promise<string> {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    throw new Error("GOOGLE_API_KEY environment variable is not set.");
+  }
+
+  const response = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gemini-2.0-flash",
+      stream: true,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: PALM_PROMPT },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        },
+      ],
+    }),
   });
 
-  // The SDK returns a ReadableStream when streaming
-  if (result instanceof ReadableStream) {
-    const reader = result.getReader();
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
+  }
+
+  // Collect streaming response
+  if (response.body instanceof ReadableStream) {
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let raw = "";
     while (true) {
@@ -79,7 +95,7 @@ async function streamVision(zai: Awaited<ReturnType<typeof ZAI.create>>, imageUr
       raw += decoder.decode(value, { stream: true });
     }
 
-    // Parse SSE chunks to extract content deltas
+    // Parse SSE chunks
     const contents: string[] = [];
     for (const line of raw.split("\n")) {
       if (!line.startsWith("data: ")) continue;
@@ -90,16 +106,17 @@ async function streamVision(zai: Awaited<ReturnType<typeof ZAI.create>>, imageUr
         const delta = parsed.choices?.[0]?.delta?.content;
         if (delta) contents.push(delta);
       } catch {
-        // skip malformed SSE chunk
+        // skip malformed chunk
       }
     }
-    console.log(`Stream collected ${contents.length} chunks, ${contents.join("").length} chars`);
+    console.log(`Gemini stream: ${contents.length} chunks, ${contents.join("").length} chars`);
     return contents.join("");
   }
 
-  // Fallback: SDK returned a parsed JSON object (non-streaming)
-  const content = (result as any).choices?.[0]?.message?.content;
-  console.log(`Non-stream response: ${content?.length || 0} chars`);
+  // Non-streaming fallback
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  console.log(`Gemini non-stream: ${content?.length || 0} chars`);
   return content || "";
 }
 
@@ -135,8 +152,7 @@ export async function POST(request: NextRequest) {
       `Image: ${(rawBuffer.byteLength / 1024).toFixed(0)}KB → ${(compressed.length / 1024).toFixed(0)}KB`
     );
 
-    const zai = await ZAI.create();
-    const content = await streamVision(zai, imageUrl);
+    const content = await analyzeWithGemini(imageUrl);
 
     if (!content) {
       return NextResponse.json(
@@ -190,6 +206,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "The AI timed out. Please try with a smaller or clearer photo." },
         { status: 504 }
+      );
+    }
+
+    if (msg.includes("API_KEY")) {
+      return NextResponse.json(
+        { error: "API configuration error. Please contact support." },
+        { status: 500 }
       );
     }
 
