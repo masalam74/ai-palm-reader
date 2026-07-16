@@ -72,7 +72,7 @@ const jsonLd = {
   name: "AI Palm Reader",
   description:
     "Free AI-powered palm reading. Upload a photo of your palm and discover what your lines reveal about your personality and destiny.",
-  url: "https://aipalmreader.com",
+  url: "https://ai-palm-reader-psi.vercel.app",
   applicationCategory: "EntertainmentApplication",
   operatingSystem: "All",
   offers: {
