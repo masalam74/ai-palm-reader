@@ -7,6 +7,6 @@ export default function robots() {
         allow: "/",
       },
     ],
-    sitemap: "https://aipalmreader.com/sitemap.xml",
+    sitemap: "https://ai-palm-reader-psi.vercel.app/sitemap.xml",
   };
 }
