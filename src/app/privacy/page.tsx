@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Privacy policy for AI Palm Reader. Learn how we handle your data and palm images.",
   openGraph: {
     title: "Privacy Policy - AI Palm Reader",
-    url: "https://aipalmreader.com/privacy",
+    url: "https://ai-palm-reader-psi.vercel.app/privacy",
   },
 };
 
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="mb-2 text-base font-semibold text-white">1. Introduction</h2>
             <p>
-              AI Palm Reader (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we handle information when you use our Service at aipalmreader.com.
+              AI Palm Reader (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we handle information when you use our Service at https://ai-palm-reader-psi.vercel.app.
             </p>
           </section>
 
