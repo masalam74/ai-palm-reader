@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Terms and conditions for using AI Palm Reader.",
   openGraph: {
     title: "Terms of Service - AI Palm Reader",
-    url: "https://aipalmreader.com/terms",
+    url: "https://ai-palm-reader-psi.vercel.app/terms",
   },
 };
 
@@ -41,7 +41,7 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-2 text-base font-semibold text-white">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using AI Palm Reader (&quot;the Service&quot;), available at aipalmreader.com, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service. These terms apply to all visitors and users of the Service.
+              By accessing and using AI Palm Reader (&quot;the Service&quot;), available at https://ai-palm-reader-psi.vercel.app, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service. These terms apply to all visitors and users of the Service.
             </p>
           </section>
 
