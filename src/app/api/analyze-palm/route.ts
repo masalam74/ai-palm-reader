@@ -66,7 +66,7 @@ async function analyzeWithGemini(imageUrl: string): Promise<string> {
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       stream: true,
       messages: [
         {
