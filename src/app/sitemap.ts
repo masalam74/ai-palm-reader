@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://aipalmreader.com";
+  const baseUrl = "https://ai-palm-reader-psi.vercel.app";
   const now = new Date();
 
   return [
