@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About AI Palm Reader",
     description: "Learn about our mission and the classical palmistry traditions behind our app.",
-    url: "https://aipalmreader.com/about",
+    url: "https://ai-palm-reader-psi.vercel.app/about",
   },
 };
 
