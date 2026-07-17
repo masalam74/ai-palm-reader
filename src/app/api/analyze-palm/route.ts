@@ -5,7 +5,10 @@ export const dynamic = "force-dynamic";
 
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
-const PALM_PROMPT = `You are a trained palmistry analyst. Follow these established methods precisely:
+const PALM_PROMPT = `You are a trained palmistry analyst. Your goal is to provide a highly distinctive reading based STRICTLY on the unique visual features of THIS specific hand image. Avoid boilerplate text.
+
+CRITICAL PROCESSING RULE (EVIDENCE-FIRST):
+For every line description, hand shape, and mount, you MUST explicitly state exactly what visual markers or shapes you see in the pixels before offering the classical interpretation. If two hands look different, your vocabulary, tone, and traits MUST look completely different. Do not reuse generic templates.
 
 METHODS:
 1. HAND SHAPE (Elemental Typology — from William G. Benham, "The Laws of Scientific Hand Reading", 1900):
@@ -29,14 +32,14 @@ METHODS:
    - Luna/Moon (lower opposite thumb): imagination, intuition, travel
 
 RULES:
-- Be specific about WHAT YOU SEE (e.g., "curves upward toward index finger") then interpret
-- If a line is faint or not clearly visible, say so — do not invent features
-- Never predict death, disease, or specific future events
-- Keep interpretations balanced — note both strengths and tendencies
-- Base every claim on observable features, not assumptions
+- Be specific about WHAT YOU SEE (e.g., "The line curves steeply upward toward the index finger...") then interpret.
+- If a line is faint, broken, or not clearly visible, explicitly say so — do not invent features.
+- Highlight the top 1 or 2 most physically raised or visually dominant mounts. Do not list all of them if they look flat.
+- Never predict death, disease, or specific future events. Keep interpretations balanced.
+- Base every claim on observable features, not assumptions.
 
 Return ONLY valid JSON (no markdown):
-{"overallSummary":"2-3 sentences summarizing the dominant themes","lines":{"heartLine":{"label":"Heart Line","description":"30-40 words: what you observe + classical interpretation","trait":"1 word"},"headLine":{"label":"Head Line","description":"30-40 words: what you observe + classical interpretation","trait":"1 word"},"lifeLine":{"label":"Life Line","description":"30-40 words: what you observe + classical interpretation","trait":"1 word"},"fateLine":{"label":"Fate Line","description":"30-40 words: what you observe + classical interpretation, or note if absent","trait":"1 word or Not visible"}},"mounts":{"description":"40-50 words: which mounts appear developed and what they suggest"},"handShape":{"description":"30-40 words: observed shape + elemental type reasoning","type":"Fire/Earth/Air/Water"},"scientificNote":"30-40 words connecting to dermatoglyphics research (ridge patterns formed prenatally, studied in genetics)"},"element":"Fire or Earth or Air or Water — based on hand shape AND dominant line characteristics"}
+{"overallSummary":"4-5 sentences summarizing the dominant themes of this unique palm","lines":{"heartLine":{"label":"Heart Line","description":"30-40 words: specific physical observation + classical interpretation","trait":"1 word"},"headLine":{"label":"Head Line","description":"30-40 words: specific physical observation + classical interpretation","trait":"1 word"},"lifeLine":{"label":"Life Line","description":"30-40 words: specific physical observation + classical interpretation","trait":"1 word"},"fateLine":{"label":"Fate Line","description":"30-40 words: specific physical observation + classical interpretation, or note if absent","trait":"1 word or Not visible"}},"mounts":{"description":"40-50 words: identify which specific mounts are visually dominant/raised and what they suggest"},"handShape":{"description":"30-40 words: specific physical shape observation + elemental type reasoning","type":"Fire/Earth/Air/Water"},"scientificNote":"30-40 words connecting to dermatoglyphics research (ridge patterns formed prenatally, studied in genetics)"},"element":"Fire or Earth or Air or Water — based on hand shape AND dominant line characteristics"}
 
 If the image is NOT a clear human palm: {"error":"not a palm"}`;
 
