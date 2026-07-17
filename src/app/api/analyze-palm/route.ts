@@ -52,73 +52,97 @@ async function compressImage(buffer: ArrayBuffer): Promise<Buffer> {
   }
 }
 
-/** Call Gemini Vision API with streaming */
+/** Call Gemini Vision API with streaming and auto-retry on 503 */
 async function analyzeWithGemini(imageUrl: string): Promise<string> {
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     throw new Error("GOOGLE_API_KEY environment variable is not set.");
   }
 
-  const response = await fetch(GEMINI_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gemini-3.5-flash",
-      stream: true,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: PALM_PROMPT },
-            { type: "image_url", image_url: { url: imageUrl } },
-          ],
+  const MAX_RETRIES = 3;
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(GEMINI_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
         },
-      ],
-    }),
-  });
+        body: JSON.stringify({
+          model: "gemini-3.5-flash",
+          stream: true,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: PALM_PROMPT },
+                { type: "image_url", image_url: { url: imageUrl } },
+              ],
+            },
+          ],
+        }),
+      });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
-  }
+      if (response.status === 503) {
+        lastError = new Error("Gemini 503");
+        console.log(`Gemini 503 on attempt ${attempt}/${MAX_RETRIES}, retrying...`);
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, 3000 * attempt));
+          continue;
+        }
+        throw new Error("SERVICE_UNAVAILABLE");
+      }
 
-  // Collect streaming response
-  if (response.body instanceof ReadableStream) {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let raw = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      raw += decoder.decode(value, { stream: true });
-    }
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
+      }
 
-    // Parse SSE chunks
-    const contents: string[] = [];
-    for (const line of raw.split("\n")) {
-      if (!line.startsWith("data: ")) continue;
-      const data = line.slice(6).trim();
-      if (data === "[DONE]") break;
-      try {
-        const parsed = JSON.parse(data);
-        const delta = parsed.choices?.[0]?.delta?.content;
-        if (delta) contents.push(delta);
-      } catch {
-        // skip malformed chunk
+      if (response.body instanceof ReadableStream) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let raw = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          raw += decoder.decode(value, { stream: true });
+        }
+
+        const contents: string[] = [];
+        for (const line of raw.split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) contents.push(delta);
+          } catch {
+            // skip malformed chunk
+          }
+        }
+        console.log(`Gemini stream: ${contents.length} chunks, ${contents.join("").length} chars`);
+        return contents.join("");
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      console.log(`Gemini non-stream: ${content?.length || 0} chars`);
+      return content || "";
+    } catch (error) {
+      if ((error as Error).message === "SERVICE_UNAVAILABLE") throw error;
+      if ((error as Error).message?.includes("Gemini API error")) throw error;
+      lastError = error as Error;
+      if (attempt < MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, 3000 * attempt));
+        continue;
       }
     }
-    console.log(`Gemini stream: ${contents.length} chunks, ${contents.join("").length} chars`);
-    return contents.join("");
   }
 
-  // Non-streaming fallback
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  console.log(`Gemini non-stream: ${content?.length || 0} chars`);
-  return content || "";
+  throw lastError || new Error("All retry attempts failed.");
 }
 
 export async function POST(request: NextRequest) {
@@ -162,7 +186,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse JSON
     try {
       let jsonStr = content.trim();
       if (jsonStr.startsWith("```")) {
@@ -179,7 +202,6 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ success: true, reading: parsed });
     } catch {
-      // JSON parse failed — return raw content as summary
       return NextResponse.json({
         success: true,
         reading: {
@@ -196,6 +218,16 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Palm analysis error:", error);
     const msg = error instanceof Error ? error.message : String(error);
+
+    if (
+      msg.includes("SERVICE_UNAVAILABLE") ||
+      msg.includes("503")
+    ) {
+      return NextResponse.json(
+        { error: "The AI is currently busy. Please try again in a minute." },
+        { status: 503 }
+      );
+    }
 
     if (
       msg.includes("timeout") ||
