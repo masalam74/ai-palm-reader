@@ -1229,6 +1229,17 @@ export default function PalmReaderPage() {
 
         {/* ─── Footer ──────────────────────────────────────────────── */}
         <footer className="mt-auto border-t border-white/5 pt-6 pb-6">
+          <p className="mb-4 text-center text-xs text-slate-400">
+            A digital product by{' '}
+            <a
+              href="https://brightorbit-labs.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-amber-400 hover:text-amber-300 hover:underline"
+            >
+              BrightOrbit Labs
+            </a>
+          </p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-slate-600">
             <a href="/about" className="transition-colors hover:text-slate-400">About</a>
             <span className="text-slate-800">·</span>
