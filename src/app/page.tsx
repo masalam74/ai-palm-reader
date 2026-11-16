@@ -1232,7 +1232,7 @@ export default function PalmReaderPage() {
           <p className="mb-4 text-center text-xs text-slate-400">
             A digital product by{' '}
             <a
-              href="https://brightorbit-labs.vercel.app/"
+              href="https://brightorbit-labs.pages.dev/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-amber-400 hover:text-amber-300 hover:underline"
